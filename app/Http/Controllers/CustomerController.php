@@ -7,24 +7,21 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    // Display list of customers
     public function index()
     {
         if (auth()->user()->role == 'sales') {
-    $customers = Customer::where('created_by', auth()->id())->get();
-} else {
-    $customers = Customer::all();
-}
+            $customers = Customer::where('created_by', auth()->id())->get();
+        } else {
+            $customers = Customer::all();
+        }
         return view('customers.index', compact('customers'));
     }
 
-    // Show create form
     public function create()
     {
         return view('customers.create');
     }
 
-    // Store new customer
     public function store(Request $request)
     {
         $request->validate([
@@ -34,11 +31,10 @@ class CustomerController extends Controller
         ]);
 
         $data = $request->all();
-$data['created_by'] = auth()->id();
+        $data['created_by'] = auth()->id();
 
-$customer = Customer::create($data);
+        $customer = Customer::create($data);
 
-        // ✅ ACTIVITY LOG
         logActivity(
             'Customer Created',
             'Customer: ' . $customer->name,
@@ -49,19 +45,16 @@ $customer = Customer::create($data);
         return redirect()->route('customers.index')->with('success', 'Customer created.');
     }
 
-    // Show single customer
     public function show(Customer $customer)
     {
         return view('customers.show', compact('customer'));
     }
 
-    // Show edit form
     public function edit(Customer $customer)
     {
         return view('customers.edit', compact('customer'));
     }
 
-    // Update customer
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
@@ -72,7 +65,6 @@ $customer = Customer::create($data);
 
         $customer->update($request->all());
 
-        // ✅ ACTIVITY LOG
         logActivity(
             'Customer Updated',
             'Customer: ' . $customer->name,
@@ -83,14 +75,12 @@ $customer = Customer::create($data);
         return redirect()->route('customers.index')->with('success', 'Customer updated.');
     }
 
-    // Delete customer
     public function destroy(Customer $customer)
     {
-        $name = $customer->name; // store before delete
+        $name = $customer->name;
 
         $customer->delete();
 
-        // ✅ ACTIVITY LOG
         logActivity(
             'Customer Deleted',
             'Customer: ' . $name,
