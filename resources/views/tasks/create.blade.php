@@ -20,17 +20,20 @@
             <label>Title:</label>
             <input type="text" name="title" value="{{ old('title') }}" required class="w-full border px-3 py-2 rounded">
         </div>
+
         <div>
             <label>Description:</label>
             <textarea name="description" rows="3" class="w-full border px-3 py-2 rounded">{{ old('description') }}</textarea>
         </div>
+
         <div>
             <label>Related To:</label>
             <select name="related_type">
-    <option value="lead">Lead</option>
-    <option value="customer">Customer</option>
-</select>
+                <option value="lead">Lead</option>
+                <option value="customer">Customer</option>
+            </select>
         </div>
+
         <div>
             <label>Select Related:</label>
             <select name="related_id" required class="w-full border px-3 py-2 rounded">
@@ -46,6 +49,19 @@
                 </optgroup>
             </select>
         </div>
+
+        <div>
+            
+            <label class="block mb-2">Tags :</label>
+
+@foreach($tags as $tag)
+    <label class="inline-flex items-center mr-4">
+        <input type="checkbox" name="tags[]" value="{{ $tag->id }}" class="mr-1">
+        {{ $tag->name }}
+    </label>
+@endforeach
+        </div>
+
         <div>
             <label>Assign To User:</label>
             <select name="assigned_user_id" required class="w-full border px-3 py-2 rounded">
@@ -54,10 +70,12 @@
                 @endforeach
             </select>
         </div>
+
         <div>
             <label>Due Date:</label>
             <input type="date" name="due_date" value="{{ old('due_date') }}" required class="w-full border px-3 py-2 rounded">
         </div>
+
         <div>
             <label>Status:</label>
             <select name="status" class="w-full border px-3 py-2 rounded">
@@ -65,6 +83,7 @@
                 <option value="Completed">Completed</option>
             </select>
         </div>
+
         <div class="flex space-x-4">
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Add Task</button>
             <a href="{{ route('tasks.index') }}" class="bg-gray-300 px-4 py-2 rounded">Back to Tasks</a>

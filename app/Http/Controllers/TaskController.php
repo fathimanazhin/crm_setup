@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\Lead;
@@ -14,11 +15,38 @@ class TaskController extends Controller
     public function index()
     {
         if (auth()->user()->role == 'sales') {
-            $tasks = Task::where('assigned_user_id', auth()->id())
-                         ->where('status', 'pending')
-                         ->get();
+            $tasks = Task::with(['tags', 'assignedUser'])
+                ->where('assigned_user_id', auth()->id())
+                ->where('status', 'pending')
+                ->get();
         } else {
-            $tasks = Task::where('status', 'pending')->get();
+            $tasks = Task::with(['tags', 'assignedUser'])
+                ->where('status', 'pending')
+                ->get();
+        }
+
+        // ✅ OPTIMIZED: remove duplicates
+        $leadIds = $tasks->where('related_type', 'lead')
+            ->pluck('related_id')
+            ->unique();
+
+        $customerIds = $tasks->where('related_type', 'customer')
+            ->pluck('related_id')
+            ->unique();
+
+        // ✅ Bulk fetch (NO N+1)
+        $leads = Lead::whereIn('id', $leadIds)->get()->keyBy('id');
+        $customers = Customer::whereIn('id', $customerIds)->get()->keyBy('id');
+
+        // ✅ Attach related name
+        foreach ($tasks as $task) {
+            if ($task->related_type == 'lead') {
+                $task->related_name = $leads[$task->related_id]->lead_name ?? 'N/A';
+            } elseif ($task->related_type == 'customer') {
+                $task->related_name = $customers[$task->related_id]->name ?? 'N/A';
+            } else {
+                $task->related_name = 'N/A';
+            }
         }
 
         return view('tasks.index', compact('tasks'));
@@ -35,7 +63,9 @@ class TaskController extends Controller
             $users = User::all();
         }
 
-        return view('tasks.create', compact('customers', 'leads', 'users'));
+        $tags = Tag::all();
+
+        return view('tasks.create', compact('customers', 'leads', 'users', 'tags'));
     }
 
     public function store(Request $request)
@@ -43,7 +73,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'title' => 'required',
             'description' => 'required',
-            'related_type' => 'required|in:lead,customer',
+            'related_type' => 'required|string|in:lead,customer',
             'related_id' => 'required',
             'assigned_user_id' => 'required|exists:users,id',
             'due_date' => 'required|date'
@@ -63,14 +93,19 @@ class TaskController extends Controller
             'status' => 'pending',
         ]);
 
-        logActivity(
+        if ($request->has('tags')) {
+            $task->tags()->sync($request->tags);
+        }
+
+        // ✅ FIXED LOGGING
+        $this->logActivity(
             'Task Created',
             'Task: ' . $task->title,
             'Task',
             $task->id
         );
 
-        return redirect()->route('tasks.index');
+        return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
     }
 
     public function edit(Task $task)
@@ -84,7 +119,9 @@ class TaskController extends Controller
             $users = User::all();
         }
 
-        return view('tasks.edit', compact('task', 'customers', 'leads', 'users'));
+        $tags = Tag::all();
+
+        return view('tasks.edit', compact('task', 'customers', 'leads', 'users', 'tags'));
     }
 
     public function update(Request $request, Task $task)
@@ -92,7 +129,7 @@ class TaskController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'assigned_user_id' => 'required|integer|exists:users,id',
-            'related_type' => 'required|string|in:Customer,Lead',
+            'related_type' => 'required|string|in:lead,customer',
             'related_id' => 'required|integer',
             'status' => 'nullable|string|in:Pending,Completed',
             'due_date' => 'required|date',
@@ -112,7 +149,18 @@ class TaskController extends Controller
             'status' => $request->status ?? 'Pending',
         ]);
 
-        $this->logActivity("Updated Task: {$task->title}");
+        if ($request->has('tags')) {
+            $task->tags()->sync($request->tags);
+        } else {
+            $task->tags()->sync([]);
+        }
+
+        $this->logActivity(
+            'Task Updated',
+            'Task: ' . $task->title,
+            'Task',
+            $task->id
+        );
 
         return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
     }
@@ -121,7 +169,12 @@ class TaskController extends Controller
     {
         $task->delete();
 
-        $this->logActivity("Deleted Task: {$task->title}");
+        $this->logActivity(
+            'Task Deleted',
+            'Task: ' . $task->title,
+            'Task',
+            $task->id
+        );
 
         return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
     }
@@ -132,19 +185,25 @@ class TaskController extends Controller
             'status' => 'Completed',
         ]);
 
-        $this->logActivity("Marked Task as Completed: {$task->title}");
+        $this->logActivity(
+            'Task Completed',
+            'Task: ' . $task->title,
+            'Task',
+            $task->id
+        );
 
         return redirect()->route('tasks.index')->with('success', 'Task marked as completed.');
     }
 
-    protected function logActivity($activity, $userId = null)
+    // ✅ FIXED FUNCTION (MAIN BUG)
+    protected function logActivity($action, $description = null, $relatedType = null, $relatedId = null)
     {
         \DB::table('activity_logs')->insert([
-            'user_id' => $userId ?? Auth::id(),
-            'action' => $activity,
-            'related_type' => 'Task',
-            'related_id' => null,
-            'description' => $activity,
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'related_type' => $relatedType,
+            'related_id' => $relatedId,
+            'description' => $description ?? $action,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

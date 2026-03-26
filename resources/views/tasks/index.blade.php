@@ -24,6 +24,7 @@
                     <th class="p-3">Assigned User</th>
                     <th class="p-3">Due Date</th>
                     <th class="p-3">Status</th>
+                    <th class="p-3">Tags</th> {{-- ADDED --}}
                     <th class="p-3">Actions</th>
                 </tr>
             </thead>
@@ -33,18 +34,24 @@
                     <td class="p-3">{{ $task->id }}</td>
                     <td class="p-3">{{ $task->title }}</td>
                     <td class="p-3">{{ class_basename($task->related_type) }}</td>
-                   <td class="p-3">
-    @if($task->related_type == 'lead')
-        {{ \App\Models\Lead::find($task->related_id)->lead_name ?? 'N/A' }}
-    @elseif($task->related_type == 'customer')
-        {{ \App\Models\Customer::find($task->related_id)->name ?? 'N/A' }}
-    @else
-        N/A
-    @endif
-</td>
+
+                    <td class="p-3">
+                        {{ $task->related_name }}
+                    </td>
+
                     <td class="p-3">{{ optional($task->assignedUser)->name ?? 'N/A' }}</td>
                     <td class="p-3">{{ $task->due_date }}</td>
                     <td class="p-3">{{ $task->status }}</td>
+
+                    {{-- TAGS COLUMN --}}
+                    <td class="p-3">
+                        @foreach($task->tags as $tag)
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1">
+                                {{ $tag->name }}
+                            </span>
+                        @endforeach
+                    </td>
+
                     <td class="p-3">
                         @php
                             $canEdit = auth()->user()->role === 'admin' || $task->assigned_user_id === auth()->id();

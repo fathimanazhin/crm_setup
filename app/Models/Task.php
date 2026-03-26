@@ -17,7 +17,11 @@ class Task extends Model
     ];
 
     public function assignedUser()
-    {
-        return $this->belongsTo(User::class, 'assigned_user_id');
-    }
+{
+    return $this->belongsTo(\App\Models\User::class, 'assigned_user_id');
+}
+    public function tags()
+{
+    return $this->belongsToMany(Tag::class, 'tag_task');
+}
 }
