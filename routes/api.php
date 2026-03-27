@@ -3,27 +3,20 @@
 use Illuminate\Http\Request;
 use App\Http\Controllers\API\PostController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
-
-// Keep the original apiResource for posts
-Route::apiResource('posts', PostController::class);
-
-// Keep your previous individual routes for reference or additional logic, 
-// but protect them with auth:sanctum so they don’t conflict
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::get('/posts/{post}', [PostController::class, 'show']);
-    Route::post('/posts', [PostController::class, 'store']);
-    Route::put('/posts/{post}', [PostController::class, 'update']);
-    Route::delete('/posts/{post}', [PostController::class, 'destroy']);
+Route::post('/login', [AuthenticatedSessionController::class, 'login']);
+// Optional: test route (keep if you want)
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
 });
+
+// Protect ALL post routes with Sanctum
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('posts', PostController::class);
+});
+Route::post('/login', [AuthenticatedSessionController::class, 'login']);

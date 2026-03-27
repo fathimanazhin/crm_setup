@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -20,27 +18,74 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
+public function store(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
+
+    if (!Auth::attempt($credentials)) {
+        throw ValidationException::withMessages([
+            'email' => 'Invalid credentials',
+        ]);
+    }
+
+    $request->session()->regenerate();
+
+    return redirect()->intended('/dashboard');
+}
+
+
     /**
-     * Handle an incoming authentication request.
+ * @OA\Post(
+ *     path="/api/login",
+ *     summary="User login",
+ *     tags={"Auth"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             required={"email","password"},
+ *             @OA\Property(property="email", type="string", example="test@example.com"),
+ *             @OA\Property(property="password", type="string", example="password")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Successful login"
+ *     )
+ * )
+ */
+
+    /**
+     * Handle an incoming authentication request and return a token.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function login(Request $request)
     {
-        $request->authenticate();
+        $credentials = $request->only('email', 'password');
 
-        $request->session()->regenerate();
+        if (!auth()->attempt($credentials)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
 
-        return redirect()->intended(RouteServiceProvider::HOME);
+        $user = auth()->user();
+        $token = $user->createToken('API Token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
     /**
      * Destroy an authenticated session.
      */
-  public function destroy(Request $request): \Illuminate\Http\RedirectResponse
-{
-    Auth::guard('web')->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+    public function destroy(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return redirect('/login'); // safe after logout, no 404
-}
+        return redirect('/login');
+    }
 }
