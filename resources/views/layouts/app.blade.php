@@ -13,45 +13,96 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link:hover {
+            transform: translateX(4px);
+            color: #60a5fa !important;
+        }
+
+        .sidebar-link.active {
+            background: rgba(79, 70, 229, 0.6);
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .sidebar-link:hover {
+            text-shadow: 0 0 5px rgba(96,165,250,0.6);
+        }
+    </style>
 </head>
 
-<body class="font-sans antialiased bg-gray-100">
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-indigo-900 to-cyan-700 text-white">
 
 <div class="flex min-h-screen">
 
     <!-- Sidebar -->
-    <div class="w-64 bg-gray-800 text-white p-5">
+    @if (!isset($noSidebar))
 
-        <h2 class="text-2xl font-bold mb-6">CRM</h2>
+    <div class="w-64 bg-indigo-950/70 backdrop-blur-lg border-r border-indigo-800 p-6 hidden md:block">
 
-        <ul class="space-y-4">
+        <h2 class="text-xl font-bold mb-8">CRM</h2>
+
+        <ul class="space-y-3">
+
             <li>
-                <a href="{{ route('dashboard') }}" class="block hover:text-blue-400">Dashboard</a>
+                <a href="{{ route('dashboard') }}" 
+                   class="block px-4 py-2 rounded-lg sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    Dashboard
+                </a>
             </li>
+
             <li>
-                <a href="{{ route('customers.index') }}" class="block hover:text-blue-400">Customers</a>
+                <a href="{{ route('customers.index') }}" 
+                   class="block px-4 py-2 rounded-lg sidebar-link {{ request()->routeIs('customers.*') ? 'active' : '' }}">
+                    Customers
+                </a>
             </li>
+
             <li>
-                <a href="{{ route('leads.index') }}" class="block hover:text-blue-400">Leads</a>
+                <a href="{{ route('leads.index') }}" 
+                   class="block px-4 py-2 rounded-lg sidebar-link {{ request()->routeIs('leads.*') ? 'active' : '' }}">
+                    Leads
+                </a>
             </li>
+
             <li>
-                <a href="{{ route('tasks.index') }}" class="block hover:text-blue-400">Tasks</a>
+                <a href="{{ route('tasks.index') }}" 
+                   class="block px-4 py-2 rounded-lg sidebar-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}">
+                    Tasks
+                </a>
             </li>
+
+            <li>
+                <a href="{{ route('calendar.index') }}" 
+                   class="block px-4 py-2 rounded-lg sidebar-link {{ request()->routeIs('calendar.*') ? 'active' : '' }}">
+                    Calendar
+                </a>
+            </li>
+
         </ul>
 
     </div>
+
+    @endif
 
     <!-- Main Content -->
     <div class="flex-1">
 
         <!-- Top Navbar -->
-        <div class="bg-white shadow p-4 flex justify-between items-center">
-            <h1 class="text-lg font-semibold">Dashboard</h1>
+        <div class="bg-white shadow p-4 flex justify-between items-center text-black">
+            <h1 class="text-lg font-semibold">
+                {{ ucfirst(request()->segment(1) ?? 'Dashboard') }}
+            </h1>
 
             <div class="flex items-center space-x-4">
                 <span>{{ Auth::user()->name }}</span>
 
-                <!-- Correct Logout Form/Button -->
+                <!-- Logout -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="text-red-500 hover:text-red-700 font-medium">

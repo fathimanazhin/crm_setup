@@ -233,23 +233,23 @@ return [
                 ],
                 */
             ],
-            'security' => [
-                /*
-                 * Examples of Securities
-                 */
-                [
-                    /*
-                    'oauth2_security_example' => [
-                        'read',
-                        'write'
-                    ],
-
-                    'passport' => []
-                    */
-                ],
-            ],
+           'security' => [
+    /*
+     * Examples of Securities
+     */
+    /*
+    [
+        'oauth2_security_example' => [
+            'read',
+            'write'
         ],
+    ],
 
+    [
+        'passport' => []
+    ],
+    */
+],
         /*
          * Set this to `true` in development mode so that docs would be regenerated on each request
          * Set this to `false` to disable swagger generation on production
@@ -331,5 +331,6 @@ return [
         'constants' => [
             'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://my-default-host.com'),
         ],
-    ],
+    
 ];
+

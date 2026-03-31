@@ -1,19 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Customer Details</title>
-</head>
-<body>
-<h2>Customer Details</h2>
+@extends('layouts.app')
 
-<p><strong>ID:</strong> {{ $customer->id }}</p>
-<p><strong>Name:</strong> {{ $customer->name }}</p>
-<p><strong>Email:</strong> {{ $customer->email }}</p>
-<p><strong>Phone:</strong> {{ $customer->phone }}</p>
-<p><strong>Company Name:</strong> {{ $customer->company_name }}</p>
-<p><strong>Address:</strong> {{ $customer->address }}</p>
-<p><strong>Status:</strong> {{ $customer->status }}</p>
+@section('content')
 
-<a href="{{ route('customers.index') }}">Back to Customers</a>
-</body>
-</html>
+<div class="p-6 text-white max-w-2xl mx-auto">
+
+    <h2 class="text-2xl font-bold mb-6">Customer Details</h2>
+
+    <div class="bg-indigo-900/60 backdrop-blur-md p-6 rounded-xl shadow-lg space-y-4">
+
+        <p><strong class="text-gray-300">ID:</strong> {{ $customer->id }}</p>
+
+        <p><strong class="text-gray-300">Name:</strong> {{ $customer->name }}</p>
+
+        <p><strong class="text-gray-300">Email:</strong> {{ $customer->email }}</p>
+
+        <p><strong class="text-gray-300">Phone:</strong> {{ $customer->phone }}</p>
+
+        <p><strong class="text-gray-300">Company Name:</strong> {{ $customer->company_name }}</p>
+
+        <p><strong class="text-gray-300">Address:</strong> {{ $customer->address }}</p>
+
+        <p>
+            <strong class="text-gray-300">Status:</strong> 
+            <span class="px-2 py-1 text-xs rounded
+                {{ $customer->status == 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400' }}">
+                {{ $customer->status }}
+            </span>
+        </p>
+
+    </div>
+
+    <div class="mt-6">
+        <a href="{{ route('customers.index') }}"
+           class="bg-indigo-700 px-4 py-2 rounded-lg text-white hover:bg-indigo-600 transition">
+            Back to Customers
+        </a>
+    </div>
+
+</div>
+
+@endsection

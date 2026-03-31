@@ -38,14 +38,15 @@ class LeadController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'lead_name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'source' => 'required',
-            'assigned_user_id' => 'required|exists:users,id',
-            'status' => 'required'
-        ]);
+        $request->validate([
+    'name' => 'required|string|max:255',
+    'phone' => [
+        'required',
+        'regex:/^[6-9]\d{9}$/',
+        'unique:leads,phone,' . ($lead->id ?? 'NULL') . ',id'
+    ],
+]);
+        
 
         if(auth()->user()->role == 'sales') {
             $assignedUser = User::find($validated['assigned_user_id']);
@@ -88,14 +89,14 @@ class LeadController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $validated = $request->validate([
-            'lead_name' => 'required',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'source' => 'required',
-            'assigned_user_id' => 'required|exists:users,id',
-            'status' => 'required'
-        ]);
+        $request->validate([
+    'name' => 'required|string|max:255',
+    'phone' => [
+        'required',
+        'regex:/^[6-9]\d{9}$/',
+        'unique:leads,phone,' . ($lead->id ?? 'NULL') . ',id'
+    ],
+]);
 
         if(auth()->user()->role == 'sales') {
             $assignedUser = User::find($validated['assigned_user_id']);

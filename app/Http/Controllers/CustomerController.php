@@ -24,11 +24,14 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'phone' => 'required',
-        ]);
+       $request->validate([
+    'name' => 'required|string|max:255',
+    'phone' => [
+        'required',
+        'regex:/^[6-9]\d{9}$/', // Indian mobile format
+        'unique:customers,phone,' . ($customer->id ?? 'NULL') . ',id'
+    ],
+]);
 
         $data = $request->all();
         $data['created_by'] = auth()->id();
@@ -58,10 +61,13 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => "required|email|unique:customers,email,{$customer->id}",
-            'phone' => 'required',
-        ]);
+    'name' => 'required|string|max:255',
+    'phone' => [
+        'required',
+        'regex:/^[6-9]\d{9}$/', // Indian mobile format
+        'unique:customers,phone,' . ($customer->id ?? 'NULL') . ',id'
+    ],
+]);
 
         $customer->update($request->all());
 
